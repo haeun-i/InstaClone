@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "800024457544",
+    "project_id": "goostar2",
+    "storage_bucket": "goostar2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:800024457544:android:519d2a2ea4dff69119437d",
+        "android_client_info": {
+          "package_name": "com.example.goostar"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "800024457544-5r6vvvb4of272l8lgn9p4svhd192tuh4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXdnyw61OMJL7ufySDS5FzElCC5V7HXeQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "800024457544-5r6vvvb4of272l8lgn9p4svhd192tuh4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
