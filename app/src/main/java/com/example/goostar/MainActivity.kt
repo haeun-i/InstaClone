@@ -23,6 +23,9 @@ class MainActivity : AppCompatActivity(), BottomNavigationView.OnNavigationItemS
 
         // 앨범에서 사진 가져올 수 있는 권한 가져오기
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 1)
+
+        // 기본 화면 세팅
+        bottom_navigation.selectedItemId = R.id.action_home
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {

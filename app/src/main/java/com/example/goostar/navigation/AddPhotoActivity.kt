@@ -7,6 +7,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import com.example.goostar.R
+import com.example.goostar.navigation.model.ContentDTO
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.android.synthetic.main.activity_add_photo.*
 import java.text.SimpleDateFormat
@@ -21,13 +24,18 @@ class AddPhotoActivity : AppCompatActivity() {
     val PICK_IMAGE_FROM_ALBUM = 0
     var storage: FirebaseStorage? = null
     var photoUri: Uri? = null
+    var auth: FirebaseAuth? = null
+    var firestore: FirebaseFirestore? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_photo)
 
-        // firebase storage 초기화
+        // firebase 초기화
         storage = FirebaseStorage.getInstance()
+        auth = FirebaseAuth.getInstance()
+        firestore = FirebaseFirestore.getInstance()
 
         // open the album
         val photoPickerIntent = Intent(Intent.ACTION_PICK)
@@ -60,11 +68,22 @@ class AddPhotoActivity : AppCompatActivity() {
         val imageFileName = "IMAGE_" + timeStamp + "_.png"
         val storageRef = storage?.reference?.child("images")?.child(imageFileName)
 
+        // 게시글 내용 생성
         storageRef?.putFile(photoUri!!)?.addOnSuccessListener {
-            Toast.makeText(
-                this, getString(R.string.upload_success),
-                Toast.LENGTH_SHORT
-            ).show()
+           storageRef.downloadUrl.addOnSuccessListener { uri ->
+               var contentDTO = ContentDTO()
+               contentDTO.imageUrl = uri.toString()
+               contentDTO.uid = auth?.currentUser?.uid
+               contentDTO.userId = auth?.currentUser?.email
+               contentDTO.explain = addphoto_edit_explain.text.toString()
+               contentDTO.timestamp = System.currentTimeMillis()
+
+               //게시물을 데이터를 생성 및 엑티비티 종료 -> 게시글 정보가 db에 들어간다
+               firestore?.collection("images")?.document()?.set(contentDTO)
+
+               setResult(Activity.RESULT_OK)
+               finish()
+           }
         }
         // !!는 null safety 제거
     }
