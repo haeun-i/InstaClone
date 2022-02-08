@@ -11,6 +11,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.goostar.navigation.*
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -63,8 +64,12 @@ class MainActivity : AppCompatActivity(), BottomNavigationView.OnNavigationItemS
             }
             R.id.action_account -> {
                 val userFragment = UserFragment()
-                supportFragmentManager
-                    .beginTransaction()
+                val uid = FirebaseAuth.getInstance().currentUser!!.uid
+                val bundle = Bundle()
+
+                bundle.putString("destinationUid", uid)
+                userFragment.arguments = bundle
+                supportFragmentManager.beginTransaction()
                     .replace(R.id.main_content, userFragment)
                     .commit()
                 return true

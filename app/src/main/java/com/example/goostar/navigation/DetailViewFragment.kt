@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.goostar.R
 import com.example.goostar.navigation.model.ContentDTO
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.fragment_detail.view.*
 import kotlinx.android.synthetic.main.item_detail.view.*
@@ -78,14 +79,48 @@ class DetailViewFragment : Fragment() {
             // 설명 텍스트
             viewHolder.detailviewitem_explain_textview.text = contentDTOs[position].explain
 
+
             // 좋아요 개수
             viewHolder.detailviewitem_favoritecounter_textview.text = "좋아요 " + contentDTOs[position].favoriteCount + "개"
+
+            // 좋아요 등록
+            viewHolder.detailviewitem_favorite_imageview.setOnClickListener { favoriteEvent(position) }
+
+            //좋아요 버튼 설정
+            if (contentDTOs[position].favorites.containsKey(FirebaseAuth.getInstance().currentUser!!.uid)) {
+                viewHolder.detailviewitem_favorite_imageview.setImageResource(R.drawable.ic_favorite)
+            } else {
+                viewHolder.detailviewitem_favorite_imageview.setImageResource(R.drawable.ic_favorite_border)
+            }
+
 
             // 사용자 프로필 이미지 - 추가 필요
        }
 
         override fun getItemCount(): Int {
             return contentDTOs.size
+        }
+
+        private fun favoriteEvent(position: Int) {
+            var tsDoc = firestore?.collection("images")?.document(contentUidList[position])
+            firestore?.runTransaction { transaction ->
+
+                val uid = FirebaseAuth.getInstance().currentUser!!.uid
+                val contentDTO = transaction.get(tsDoc!!).toObject(ContentDTO::class.java)
+
+                if (contentDTO!!.favorites.containsKey(uid)) {
+                    // 좋아요 버튼이 이미 눌려있는 경우 - containsKey가 true
+                        // map에서 key가 있는지르 확인하는게 containsKey
+                    contentDTO?.favoriteCount = contentDTO?.favoriteCount!! - 1
+                    contentDTO?.favorites.remove(uid)
+
+                } else {
+                    // 클릭 되어있지 않은 경우
+                    contentDTO?.favoriteCount = contentDTO?.favoriteCount!! + 1
+                    contentDTO?.favorites[uid] = true
+                }
+                transaction.set(tsDoc, contentDTO)
+            }
         }
     }
 

@@ -57,6 +57,15 @@ class LoginActivity : AppCompatActivity() {
     fun moveMainPage(user: FirebaseUser?){
         if(user!= null){
             startActivity(Intent(this,MainActivity::class.java)) // main activity 이동 코드
+            finish() // 이동하고 로그인 액티비티는 꺼진다
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        //자동 로그인 설정 - 로그인 되어 있으면 메인 페이지로 이동
+        moveMainPage(auth?.currentUser)
+
     }
 }
