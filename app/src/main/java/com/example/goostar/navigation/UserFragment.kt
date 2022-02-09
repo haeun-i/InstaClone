@@ -17,6 +17,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.example.goostar.LoginActivity
 import com.example.goostar.MainActivity
 import com.example.goostar.R
+import com.example.goostar.navigation.model.AlarmDTO
 import com.example.goostar.navigation.model.ContentDTO
 import com.example.goostar.navigation.model.FollowDTO
 import com.google.firebase.auth.FirebaseAuth
@@ -194,6 +195,7 @@ class UserFragment : Fragment() {
 
                     followDTO!!.followerCount = followDTO!!.followerCount + 1
                     followDTO!!.followers[currentUserUid!!] = true
+                    followerAlarm(uid!!)
 
                 }// Star the post and add self to stars
 
@@ -234,6 +236,17 @@ class UserFragment : Fragment() {
 
         }
 
+    }
+
+    fun followerAlarm(destinationUid: String) {
+        val alarmDTO = AlarmDTO()
+        alarmDTO.destinationUid = destinationUid
+        alarmDTO.userId = auth?.currentUser!!.email
+        alarmDTO.uid = auth?.currentUser!!.uid
+        alarmDTO.kind = 2
+        alarmDTO.timestamp = System.currentTimeMillis()
+
+        FirebaseFirestore.getInstance().collection("alarms").document().set(alarmDTO)
     }
 
     // 올린 이미지를 다운로드받는 함수

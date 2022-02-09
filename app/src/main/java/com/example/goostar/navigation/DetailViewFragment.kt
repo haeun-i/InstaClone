@@ -1,5 +1,6 @@
 package com.example.goostar.navigation
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.goostar.R
+import com.example.goostar.navigation.model.AlarmDTO
 import com.example.goostar.navigation.model.ContentDTO
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -104,6 +106,14 @@ class DetailViewFragment : Fragment() {
                 activity?.supportFragmentManager?.beginTransaction()?.replace(R.id.main_content, fragment)?.commit()
             }
 
+            // 말풍선 아이콘 누르면 댓글창으로 이동
+            viewHolder.detailviewitem_comment_imageview.setOnClickListener { v ->
+                var intent = Intent(v.context, CommentActivity::class.java)
+                intent.putExtra("contentUid", contentUidList[position]) // 선택한 이미지의 uid
+                intent.putExtra("destinationUid", contentDTOs[position].uid)
+                startActivity(intent)
+            }
+
             // 사용자 프로필 이미지 - 추가 필요
        }
 
@@ -128,10 +138,24 @@ class DetailViewFragment : Fragment() {
                     // 클릭 되어있지 않은 경우
                     contentDTO?.favoriteCount = contentDTO?.favoriteCount!! + 1
                     contentDTO?.favorites[uid] = true
+                    favoriteAlarm(contentDTOs[position].uid!!)
                 }
                 transaction.set(tsDoc, contentDTO)
             }
         }
+
+        fun favoriteAlarm(destinationUid: String) {
+
+            val alarmDTO = AlarmDTO()
+            alarmDTO.destinationUid = destinationUid
+            alarmDTO.userId = FirebaseAuth.getInstance().currentUser?.email
+            alarmDTO.uid = FirebaseAuth.getInstance().currentUser?.uid
+            alarmDTO.kind = 0
+            alarmDTO.timestamp = System.currentTimeMillis()
+
+            FirebaseFirestore.getInstance().collection("alarms").document().set(alarmDTO)
+        }
+
     }
 
 }

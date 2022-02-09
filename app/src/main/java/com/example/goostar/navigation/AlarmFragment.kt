@@ -4,22 +4,105 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.example.goostar.R
+import com.example.goostar.navigation.model.AlarmDTO
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
+import kotlinx.android.synthetic.main.fragment_alarm.view.*
+import kotlinx.android.synthetic.main.item_comment.view.*
+import java.util.ArrayList
 
-// Fragment는 Activity 내에서 UI의 일부분을 나타내는 요소
-// 즉, 한 화면에 여러개의 화면을 보여주기위해 많이 사용
-// Activity는 앱 UI의 탐색 네비게이션(구역)과 같은 전역적인 요소를 사용하고,
-// 탐색 네비게이션 선택에 따라 컨텐츠가 보이는 부분은 프래그먼트로 사용 할 것을 권장한다.
-// 출처: https://juahnpop.tistory.com/224 [Blacklog]
 
 class AlarmFragment : Fragment() {
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        var view = LayoutInflater.from(activity).inflate(R.layout.fragment_alarm, container, false)
+
+    var alarmSnapshot: ListenerRegistration? = null
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        val view = inflater.inflate(R.layout.fragment_alarm, container, false)
+        view.alarmframgent_recyclerview.adapter = AlarmRecyclerViewAdapter()
+        view.alarmframgent_recyclerview.layoutManager = LinearLayoutManager(activity)
+
         return view
+    }
+
+    inner class AlarmRecyclerViewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        val alarmDTOList : ArrayList<AlarmDTO> = arrayListOf()
+
+        init {
+
+            val uid = FirebaseAuth.getInstance().currentUser!!.uid
+            FirebaseFirestore.getInstance()
+                .collection("alarms")
+                .whereEqualTo("destinationUid", uid)
+                .addSnapshotListener { querySnapshot, firebaseFirestoreException ->
+                    alarmDTOList.clear()
+                    if(querySnapshot == null)return@addSnapshotListener
+
+                    for (snapshot in querySnapshot?.documents!!) {
+                        alarmDTOList.add(snapshot.toObject(AlarmDTO::class.java)!!)
+                    }
+                    alarmDTOList.sortByDescending { it.timestamp }
+                    notifyDataSetChanged()
+                }
+
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_comment, parent, false)
+            return CustomViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+
+            val profileImage = holder.itemView.commentviewitem_imageview_profile
+            val commentTextView = holder.itemView.commentviewitem_textview_profile
+
+            FirebaseFirestore.getInstance().collection("profileImages")
+                .document(alarmDTOList[position].uid!!).get().addOnCompleteListener {
+                        task ->
+                    if(task.isSuccessful){
+                        val url = task.result!!["image"]
+                        Glide.with(view!!.context)
+                            .load(url)
+                            .apply(RequestOptions().circleCrop())
+                            .into(profileImage)
+                    }
+                }
+
+            when (alarmDTOList[position].kind) {
+                0 -> {
+                    val str_0 = alarmDTOList[position].userId + getString(R.string.alarm_favorite)
+                    view?.commentviewitem_textview_profile?.text = str_0
+                }
+
+                1 -> {
+                    val str_1 = alarmDTOList[position].userId + " " + getString(R.string.alarm_comment) + " of " + alarmDTOList[position].message
+                    view?.commentviewitem_textview_profile?.text = str_1
+                }
+
+                2 -> {
+                    val str_2 = alarmDTOList[position].userId + getString(R.string.alarm_follow)
+                    view?.commentviewitem_textview_profile?.text = str_2
+                }
+
+            }
+            view?.commentviewitem_textview_comment?.visibility = View.INVISIBLE
+        }
+
+        override fun getItemCount(): Int {
+            return alarmDTOList.size
+        }
+
+        inner class CustomViewHolder(view: View) : RecyclerView.ViewHolder(view)
+
     }
 }
